@@ -1,6 +1,5 @@
 [versions]
-minecraft = "1.21.1"
-neoForge = "21.1.238"
+# Minecraft / NeoForge 版本统一在 gradle.properties 的 ## Environment info 里维护，避免两处版本号不一致。
 anvillib = "2.0.0+snapshot.565"
 anvilcraft = "1.6.0+snapshot.2713"
 ageratum = "0.0.1+build.121"

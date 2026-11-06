@@ -126,3 +126,6 @@ runs/
 
 # Datagen output (runData)
 /src/generated/
+
+# Local maven repository (gradlew publish without MAVEN_URL)
+/repo/

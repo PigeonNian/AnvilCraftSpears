@@ -1,0 +1,80 @@
+name: CI for Mod
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - dev/**
+      - releases/**
+    paths:
+      - src/**
+      - gradle/**
+      - build.gradle
+      - dependencies.gradle
+      - gradle.properties
+      - settings.gradle
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BUILD_TYPE: snapshot
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read Properties
+        id: properties
+        uses: christian-draeger/read-properties@1.1.1
+        with:
+          path: gradle.properties
+          properties: 'mod_id mod_name java_version upload'
+
+      - name: Setup Java ${{ steps.properties.outputs.java_version }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: ${{ steps.properties.outputs.java_version }}
+
+      - name: Make gradle wrapper executable
+        if: ${{ runner.os != 'Windows' }}
+        run: chmod +x ./gradlew
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Get Version
+        id: version
+        run: |
+          JAR=$(ls build/libs/*.jar | grep -v -- '-sources' | grep -v -- '-shadow' | grep -v -- '-slim' | head -n 1)
+          MESSAGE=$(basename "$JAR" .jar)
+          MESSAGE=${MESSAGE#"${{ steps.properties.outputs.mod_id }}-neoforge-"}
+          echo "version=$MESSAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Get Artifact Name
+        id: artifact_name
+        run: |
+          NAME=$(echo "${{ steps.properties.outputs.mod_name }} ${{ steps.version.outputs.version }}" | sed 's/["\\:<>|*?\/]//g')
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Capture build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: "${{ steps.artifact_name.outputs.name }}"
+          path: build/libs/${{ steps.properties.outputs.mod_id }}-neoforge-${{ steps.version.outputs.version }}.jar
+
+      - name: Publish to maven
+        if: ${{ steps.properties.outputs.upload == 'true' }}
+        run: ./gradlew publish
+        env:
+          MAVEN_URL: ${{ secrets.MAVEN_URL }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASS }}
+        continue-on-error: true
+
+# 专用服务器启动测试（可选）：本模组依赖 AnvilCraft 与 Backported Spears，
+# 需要先确认两者在测试服上的下载坐标，再参考 Anvil-Dev/dedicated-server-launch-test 添加。

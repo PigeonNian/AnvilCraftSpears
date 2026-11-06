@@ -1,10 +1,42 @@
-# AnvilCraft: Spears
+<div align="center" style="align-items: center">
+
+## Minecraft模组 by [鸽の念@bilibili](https://space.bilibili.com/23416735)
+
+# 铁砧工艺：矛 | [AnvilCraft: Spears](./README_en.md)
+
+![Java21](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/java21_vector.svg)
+![NeoForge](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/neoforge_vector.svg)
+
+[![AnvilLib](https://cdn.jsdelivr.net/npm/@gugle/devins-badges-plus/assets/cozy/mc/anvillib_vector.svg)][AnvilLib]
+[![AnvilCraft](https://cdn.jsdelivr.net/npm/@gugle/devins-badges-plus/assets/cozy/mc/anvilcraft_vector.svg)][AnvilCraft]
+
+![Unsupported Fabric](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/unsupported/fabric_vector.svg)
+![Unsupported Forge](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/unsupported/forge_vector.svg)
+
+### 许可协议
+
+[![License](https://cdn.jsdelivr.net/npm/@gugle/devins-badges-plus/assets/cozy/license/lgpl-v3_vector.svg)][License]
+
+### 资源许可协议
+
+[![Asset License](https://cdn.jsdelivr.net/npm/@gugle/devins-badges-plus/assets/cozy/license/arr_vector.svg)][Asset License]
+
+[AnvilLib]: https://lib.anvilcraft.dev
+
+[AnvilCraft]: https://www.anvilcraft.dev
+
+[License]: https://spdx.org/licenses/LGPL-3.0-or-later.html
+
+[Asset License]: https://gist.github.com/Gu-ZT/38961ed5c97500cf61b04ab048fa38ad
+</div>
+
+## 简介
 
 把 AnvilCraft **重戟（Heavy Halberd）的矛模式**接进 [Backported Spears](https://github.com/Unknowneth/Backported-Spears)。
 不新增任何物品——只是让原本“有空壳、没机制”的矛模式真正变成一把矛。
 
 - Minecraft 1.21.1 / NeoForge 21.1.238
-- AnvilCraft 1.6.0+snapshot.2713、AnvilLib 2.0.0+snapshot.565、Ageratum 0.0.1+build.121
+- AnvilCraft 1.6.0+、AnvilLib 2.0.0+
 - Backported Spears 1.8.0
 
 ## 矛模式下会得到什么
@@ -37,29 +69,13 @@ Backported Spears 的战斗逻辑全部由物品栈上的**数据组件**驱动�
 所以接入方式就是：**矛模式挂上这些组件，其它模式摘掉**。
 组件同步发生在四个时机：模式切换（`SwitchHeavyHalberdModePacket` → `HeavyHalberdItem.setMode`）、物品从存档/网络加载、每 tick 兜底、以及右键时由 `use` 触发的使用状态。
 
-## 代码结构
+## 使用方法
 
-```
-src/main/java/dev/anvilcraft/addon/spears/
-├── AnvilCraftSpears.java            入口（只有日志，没有新内容注册）
-├── HeavyHalberdSpearMode.java       组件桥接：isSpearMode / sync / 组件数值
-└── mixin/
-    └── HeavyHalberdItemMixin.java   use、getUseAnimation、getUseDuration、组件同步、lunge 门槛
+1. 安装 NeoForge 1.21.1，准备 AnvilCraft、AnvilLib 与 Backported Spears；
+2. 把本模组与上述依赖一起放进 `mods` 文件夹；
+3. 启动游戏，手持重戟切换到**矛模式**即可获得完整的矛机制。
 
-src/main/resources/
-├── anvilcraft_spears.mixins.json
-└── data/minecraft/tags/item/enchantable/lunge.json   让重戟能吃 lunge 附魔
-```
-
-## 调参
-
-改 `HeavyHalberdSpearMode.SpearComponents` 里的常量即可：
-
-- `SWING_ANIMATION`：`20` tick 是挥砍时长，重戟比普通矛慢
-- `KINETIC_WEAPON`：第 3 个参数是蓄力延迟 tick，后面三个 `Condition` 分别是击落骑乘 / 击退 / 增伤的速度门槛与最长蓄力时间
-- `1.35F` 是冲锋伤害倍率，想更“重”可以调到 1.5
-
-## 构建与运行
+## 构建
 
 ```powershell
 # 编译打包（本机已有 Gradle 缓存时可加 --offline）
@@ -70,9 +86,29 @@ src/main/resources/
 .\gradlew runServer
 ```
 
-产物：`build/libs/anvilcraft_spears-neoforge-1.21.1-0.1.0.jar`
+产物：`build/libs/anvilcraft_spears-neoforge-1.21.1-1.0.0.jar`
 
-依赖解析需要能访问 `maven.neoforged.net` 与 `server.cjsah.net`；Backported Spears 用 `libs/` 里自带的 1.21.1 NeoForge jar（`dependencies.gradle` 的 `spearsJar`）。
+依赖解析需要能访问 `maven.neoforged.net` 与 `server.cjsah.net`；Backported Spears 使用 `libs/` 里自带的 1.21.1 NeoForge jar（`dependencies.gradle` 的 `spearsJar`）。
+
+## 版本管理
+
+版本号只有一个来源：`gradle.properties` 中的 `mod_version`。
+
+| 场景 | 版本号 |
+| --- | --- |
+| 本地构建 | `1.0.0` |
+| CI 快照（push 到 `master` / `dev/**` / `releases/**`） | `1.0.0+snapshot.<run_number>` |
+| PR 构建 | `1.0.0+pr.<run_number>` |
+| 打 tag 发版（`v1.0.0`） | `1.0.0` |
+
+发版流程：
+
+1. 修改 `gradle.properties` 的 `mod_version`；
+2. 提交并推送；
+3. 在 GitHub 上创建 tag（如 `v1.0.0`）并发布 Release。
+
+tag 与 `mod_version` 不一致时构建会直接失败，避免“jar 里一套版本、仓库里另一套版本”。
+`upload`、`modrinth_id`、`curseforge_id` 用于发布平台，未配置时 CI 只构建、不上传。
 
 ## 已验证
 
@@ -86,6 +122,11 @@ src/main/resources/
 - 重戟本体的“重锤下落猛击”逻辑在矛模式下依然存在（AnvilCraft 本体设计如此），需要的话可以再 mixin `hurtEnemy` 里按模式屏蔽。
 - 若矛模组以后改了组件结构，优先检查 `HeavyHalberdSpearMode` 的组件构造参数。
 
-## 许可
+## 主要维护者
 
-MIT。AnvilCraft（LGPL-3.0）与 Backported Spears 仅作为依赖引用，不包含在本仓库中。
+[@PigeonNian](https://github.com/PigeonNian)
+
+## 使用许可
+
+* 除非另有说明，否则代码默认许可为 [LICENSE 文件(LGPL-3.0)](./LICENSE)
+* 除非另有说明，否则非代码资产默认许可为 [ASSET_LICENSE 文件(ARR)](./ASSETS_LICENSE)
