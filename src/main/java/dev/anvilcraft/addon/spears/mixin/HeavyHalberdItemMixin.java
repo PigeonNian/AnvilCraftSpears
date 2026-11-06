@@ -10,7 +10,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,23 +18,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * 让 AnvilCraft 重戟的“矛模式”（{@code HeavyHalberdItem.SPEAR_MODE}）表现得像 Backported Spears 的矛。
- *
- * <p>重戟原先只实现了三叉戟 / 剑 / 重锤三种模式的实际行为，矛模式是空壳。
- * 这里补上矛模式需要的三件事：</p>
- * <ol>
- *   <li>右键开始“蓄力”（Backported Spears 的冲锋由 {@code ItemStack.usageTick} 驱动，必须处于使用状态）；</li>
- *   <li>使用动画与使用时长（{@code UseAnim.SPEAR} / 72000 tick）；</li>
- *   <li>在模式切换、物品加载、每 tick 时把矛组件同步到物品栈上。</li>
- * </ol>
- */
 @Mixin(HeavyHalberdItem.class)
 public abstract class HeavyHalberdItemMixin {
-    /**
-     * 原版 {@code use} 对矛模式返回 PASS。这里在返回 PASS 时接管：开始蓄力。
-     * 放在 RETURN 而不是 HEAD，是为了保留原方法对“即将损坏”的判断。
-     */
     @Inject(method = "use", at = @At("RETURN"), cancellable = true)
     private void anvilcraftspears$startSpearCharge(
         Level level,
@@ -46,13 +30,11 @@ public abstract class HeavyHalberdItemMixin {
         ItemStack stack = player.getItemInHand(hand);
         if (cir.getReturnValue().getResult() != InteractionResult.PASS) return;
         if (!HeavyHalberdSpearMode.isSpearMode(stack)) return;
+        // 先补组件，再进入使用状态：客户端 getUseItem() 会捕获此刻的栈，
+        // 若此时栈上没有 USE_EFFECTS，矛模组抵消 0.2 减速、允许疾跑的逻辑就不会生效。
+        HeavyHalberdSpearMode.sync(stack);
         player.startUsingItem(hand);
         cir.setReturnValue(InteractionResultHolder.consume(stack));
-    }
-
-    @Inject(method = "getUseAnimation", at = @At("HEAD"), cancellable = true)
-    private void anvilcraftspears$spearUseAnimation(ItemStack stack, CallbackInfoReturnable<UseAnim> cir) {
-        if (HeavyHalberdSpearMode.isSpearMode(stack)) cir.setReturnValue(UseAnim.SPEAR);
     }
 
     @Inject(method = "getUseDuration", at = @At("HEAD"), cancellable = true)
@@ -64,19 +46,16 @@ public abstract class HeavyHalberdItemMixin {
         if (HeavyHalberdSpearMode.isSpearMode(stack)) cir.setReturnValue(72000);
     }
 
-    /** 模式切换（服务端 {@code SwitchHeavyHalberdModePacket}）后立刻同步，避免有一 tick 的空窗。 */
     @Inject(method = "setMode", at = @At("TAIL"))
     private static void anvilcraftspears$syncOnModeSwitch(Player player, InteractionHand hand, int mode, CallbackInfo ci) {
         HeavyHalberdSpearMode.sync(player.getItemInHand(hand));
     }
 
-    /** 物品从存档 / 网络加载后补齐组件（老存档里的重戟也能直接进矛模式）。 */
     @Inject(method = "verifyComponentsAfterLoad", at = @At("TAIL"))
     private void anvilcraftspears$syncOnLoad(ItemStack stack, CallbackInfo ci) {
         HeavyHalberdSpearMode.sync(stack);
     }
 
-    /** 保险：每 tick 对齐一次，兜住指令 / 创造模式 / 第三方模组直接改数据的情况。 */
     @Inject(method = "inventoryTick", at = @At("TAIL"))
     private void anvilcraftspears$syncOnTick(
         ItemStack stack,
@@ -89,9 +68,6 @@ public abstract class HeavyHalberdItemMixin {
         HeavyHalberdSpearMode.sync(stack);
     }
 
-    /**
-     * 突刺附魔（lunge）只在矛模式下生效；其它模式下即便附上了也不参与计算。
-     */
     @Inject(method = "isEnchantmentActive", at = @At("HEAD"), cancellable = true)
     private static void anvilcraftspears$lungeOnlyInSpearMode(
         ItemStack stack,

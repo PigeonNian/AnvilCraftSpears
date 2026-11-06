@@ -4,9 +4,11 @@
   "package": "dev.anvilcraft.addon.spears.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "HeavyHalberdItemMixin"
+    "HeavyHalberdItemMixin",
+    "SpearKineticWeaponMixin"
   ],
   "client": [
+    "CrabClawItemInHandRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
