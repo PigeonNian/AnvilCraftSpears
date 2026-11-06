@@ -1,0 +1,20 @@
+// Backported Spears 的 1.21.1 / NeoForge 构建产物（见 README：如何升级到新版本）。
+ext.spearsJar = file("libs/spear-backport-neoforge-1.8.0-1.21.1.jar")
+
+dependencies {
+    // AnvilLib —— Registrum 注册框架（AnvilCraft 本体也依赖它）。
+    api(libs.anvillib)
+    interfaceInjectionData(libs.anvillib.recipe)
+    interfaceInjectionData(libs.anvillib.moveableEntityBlock)
+
+    // AnvilCraft 本体（ModItems / ModTiers / ModItemGroups 等 API）。
+    implementation(libs.anvilcraft) { transitive = false }
+    interfaceInjectionData(libs.anvilcraft) { transitive = false }
+
+    // Ageratum：AnvilCraft 的资源生成/渲染工具库，运行期由本体提供。
+    compileOnly(libs.ageratum)
+
+    // 联动目标：compileOnly 仅用于编译，runtimeOnly 让它出现在 runClient 的 classpath 上。
+    compileOnly(files(spearsJar))
+    runtimeOnly(files(spearsJar))
+}

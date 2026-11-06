@@ -1,0 +1,21 @@
+repositories {
+    exclusiveContent {
+        forRepositories(
+            mavenCentral(),
+            maven { // AnvilCraft / AnvilLib / Ageratum 官方仓库
+                name = "Cjsah Maven"
+                url = "https://server.cjsah.net:1002/maven/releases/"
+                content {
+                    includeGroup "dev.anvilcraft.lib"
+                    includeGroup "dev.anvilcraft.resource"
+                    includeGroup "dev.dubhe"
+                }
+            }
+        )
+        filter {
+            includeGroup "dev.anvilcraft.lib"
+            includeGroup "dev.anvilcraft.resource"
+            includeGroup "dev.dubhe"
+        }
+    }
+}

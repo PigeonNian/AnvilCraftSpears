@@ -1,0 +1,45 @@
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "${mod_license}"
+#issueTrackerURL="https://github.com/yourname/AnvilCraftSpears/issues"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+displayURL = "https://docs.anvilcraft.dev/"
+authors = "${mod_authors}"
+description = '''${mod_description}'''
+
+[[mixins]]
+config = "${mod_id}.mixins.json"
+
+[[dependencies."${mod_id}"]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neo_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+# AnvilCraft 本体。AFTER 保证它的注册表（ModItems 等）先于我们初始化。
+[[dependencies."${mod_id}"]]
+modId = "anvilcraft"
+type = "required"
+versionRange = "[1.6.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Backported Spears。AFTER 保证它的数据组件（attack_range 等）在重戟进矛模式之前已注册好。
+[[dependencies."${mod_id}"]]
+modId = "spears"
+type = "required"
+versionRange = "[1.6.0,)"
+ordering = "AFTER"
+side = "BOTH"

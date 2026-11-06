@@ -1,0 +1,40 @@
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'maven-publish'
+    id 'idea'
+    alias libs.plugins.modDevGradle
+}
+
+String buildNumber = System.getenv("GITHUB_RUN_NUMBER")
+String buildType = System.getenv("BUILD_TYPE") ?: "build"
+def githubRef = System.getenv("GITHUB_REF")
+
+if (githubRef != null && githubRef.startsWith("refs/tags/")) {
+    version = githubRef.substring(githubRef.lastIndexOf('/') + 1)
+} else {
+    version = "${mod_version}" + (buildNumber != null ? "+${buildType}.${buildNumber}" : "")
+}
+group = maven_group
+
+apply from: "$rootDir/gradle/scripts/moddevgradle.gradle"
+apply from: "$rootDir/gradle/scripts/repositories.gradle"
+apply from: "$rootDir/gradle/scripts/jars.gradle"
+apply from: "$rootDir/gradle/scripts/publishing.gradle"
+apply from: "$rootDir/gradle/scripts/resources.gradle"
+apply from: "$rootDir/dependencies.gradle"
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
+compileJava.options.encoding = 'UTF-8'
+
+// 资源（模型/语言/配方/标签）都手写在 src/main/resources 里，因此默认不启用 src/generated/resources。
+// 若以后改用 runData 生成资源，取消下面这行注释，并删掉 src/main/resources 下与生成物同名的文件，
+// 否则 jar 内会出现重复条目。
+// sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
