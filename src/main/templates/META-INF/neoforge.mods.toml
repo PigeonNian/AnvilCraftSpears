@@ -12,8 +12,8 @@ version = "${mod_version}" #mandatory
 displayName = "${mod_name}" #mandatory
 # 模组主页
 displayURL = "https://github.com/PigeonNian/AnvilCraftSpears" #optional
-# 如后续添加 logo，请把图片放在 src/main/resources 下并取消下一行注释
-#logoFile = "${mod_id}.png" #optional
+# 模组图标（jar 根目录）
+logoFile = "${mod_id}.png" #optional
 authors = "${mod_authors}" #optional
 description = '''${mod_description}'''
 
